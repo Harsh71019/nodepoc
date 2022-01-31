@@ -131,6 +131,7 @@ exports.getUserProfile = asyncHandler(async (req, res) => {
 });
 
 exports.logoutUser = asyncHandler(async (req, res) => {
+  
   const user = await User.findById(req.user._id);
   const token = req.headers.authorization.split(" ")[1];
 
