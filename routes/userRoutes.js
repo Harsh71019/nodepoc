@@ -8,7 +8,8 @@ const {
   loginUser,
   getUserProfile,
   logoutUser,
-  deleteUser
+  deleteUser,
+  logoutUserAllDevices
 } = require("../controllers/userController");
 const { validateUser } = require("../validators/userValidator");
 
@@ -21,5 +22,6 @@ router
 
 router.route("/login").post(loginUser);
 router.route("/logout").post(protect, logoutUser);
+router.route("/logout-all-devices").post(protect, logoutUserAllDevices);
 
 module.exports = router;

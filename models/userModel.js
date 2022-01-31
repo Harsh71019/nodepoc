@@ -35,9 +35,14 @@ const userSchema = new mongoose.Schema(
       required: [true, "Please enter your password"],
       minLength: [8, "Your password must be longer than 6 characters"],
     },
-    token: {
-      type: Array,
-    },
+    token: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
     createdAt: {
       type: Date,
       default: Date.now,
@@ -47,7 +52,6 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
 
 userSchema.methods.matchPasswords = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
@@ -61,8 +65,6 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-
 const User = mongoose.model("User", userSchema);
 
-module.exports =  User
-  
+module.exports = User;

@@ -9,14 +9,14 @@ const jwt = require("jsonwebtoken");
 //Access Level : Public
 
 /**
- * @swagger 
- * /api/v1/user:  
+ * @swagger
+ * /api/v1/user:
  *  post:
  *      summary: Api to register user
  *      description: Take email and password name etc
  *      response:
  *         200:
- *              description: To post a user 
+ *              description: To post a user
  */
 
 exports.registerUser = asyncHandler(async (req, res) => {
@@ -37,7 +37,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
 
   if (user) {
     const token = generateToken(user._id);
-    user.token.push(token);
+    user.token.push({ token });
     await user.save();
     res.status(201).json({
       _id: user._id,
@@ -94,7 +94,7 @@ exports.loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
   if (user && (await user.matchPasswords(password))) {
     const token = generateToken(user._id);
-    user.token = token;
+    user.token.push({ token });
     await user.save();
     res.json({
       _id: user._id,
@@ -132,12 +132,32 @@ exports.getUserProfile = asyncHandler(async (req, res) => {
 
 exports.logoutUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
+  const token = req.headers.authorization.split(" ")[1];
 
   if (user) {
-    user.token = [];
+    const getTokenIdFromDB = user.token.find(
+      (tokenID) => tokenID.token === token
+    );
+    await user.token.remove(getTokenIdFromDB._id);
     await user.save();
     res.json({
       message: "Logged out successfully",
+    });
+  } else {
+    res.status(401);
+    throw new Error("User not found");
+  }
+});
+
+exports.logoutUserAllDevices = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+
+    user.token = []
+    await user.save();
+    res.json({
+      message: "Logged out  from all devices successfully",
     });
   } else {
     res.status(401);
