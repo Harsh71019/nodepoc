@@ -1,9 +1,8 @@
-const asyncHandler = require("express-async-handler");
-const User = require("../models/userModel");
-const Post = require("../models/postModel");
-const generateToken = require("../utils/generateToken");
-const jwt = require("jsonwebtoken");
-
+import asyncHandler from "express-async-handler";
+import User from "../models/userModel";
+import Post from "../models/postModel";
+import { generateToken } from "../utils/generateToken";
+import { userPayload, IGetUserAuthInfoRequest } from "../types";
 //Description : Register a new user
 //Route name :  POST /api/v1/user
 //Access Level : Public
@@ -19,8 +18,9 @@ const jwt = require("jsonwebtoken");
  *              description: To post a user
  */
 
-exports.registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, dob, email, mobile, password } = req.body;
+const registerUser = asyncHandler(async (req, res) => {
+  const { firstName, lastName, dob, email, mobile, password } =
+    req.body as userPayload;
   const userExist = await User.findOne({ email });
   if (userExist) {
     res.status(400);
@@ -58,8 +58,8 @@ exports.registerUser = asyncHandler(async (req, res) => {
 //Route name :  PATCH /api/v1/user
 //Access Level : Private
 
-exports.updateUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+const updateUser = asyncHandler(async (req: IGetUserAuthInfoRequest, res) => {
+  const user = await User.findById(req?.user?._id);
   if (user) {
     user.firstName = req.body.firstName || user.firstName;
     user.lastName = req.body.lastName || user.lastName;
@@ -73,7 +73,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
     const updatedUser = await user.save();
     const token = generateToken(updatedUser._id);
     user.token = token;
-    await user.save();
+    await user.save(); //Save status codes in Constants
     res.status(201).json({
       _id: user._id,
       firstName: user.firstName,
@@ -89,7 +89,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
   }
 });
 
-exports.loginUser = asyncHandler(async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (user && (await user.matchPasswords(password))) {
@@ -111,29 +111,30 @@ exports.loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-exports.getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+const getUserProfile = asyncHandler(
+  async (req: IGetUserAuthInfoRequest, res) => {
+    const user = await User.findById(req?.user?._id);
 
-  if (user) {
-    res.json({
-      _id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      dob: user.dob,
-      email: user.email,
-      mobile: user.mobile,
-      token: generateToken(user._id),
-    });
-  } else {
-    res.status(401);
-    throw new Error("User not found");
+    if (user) {
+      res.json({
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        dob: user.dob,
+        email: user.email,
+        mobile: user.mobile,
+        token: generateToken(user._id),
+      });
+    } else {
+      res.status(401);
+      throw new Error("User not found");
+    }
   }
-});
+);
 
-exports.logoutUser = asyncHandler(async (req, res) => {
-  
-  const user = await User.findById(req.user._id);
-  const token = req.headers.authorization.split(" ")[1];
+const logoutUser = asyncHandler(async (req: IGetUserAuthInfoRequest, res) => {
+  const user = await User.findById(req?.user?._id);
+  const token = req?.headers?.authorization?.split(" ")[1];
 
   if (user) {
     const getTokenIdFromDB = user.token.find(
@@ -150,34 +151,35 @@ exports.logoutUser = asyncHandler(async (req, res) => {
   }
 });
 
-exports.logoutUserAllDevices = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+const logoutUserAllDevices = asyncHandler(
+  async (req: IGetUserAuthInfoRequest, res) => {
+    const user = await User.findById(req?.user?._id);
 
-  if (user) {
-
-    user.token = []
-    await user.save();
-    res.json({
-      message: "Logged out  from all devices successfully",
-    });
-  } else {
-    res.status(401);
-    throw new Error("User not found");
+    if (user) {
+      user.token = [];
+      await user.save();
+      res.json({
+        message: "Logged out  from all devices successfully",
+      });
+    } else {
+      res.status(401);
+      throw new Error("User not found");
+    }
   }
-});
+);
 
-exports.deleteUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+const deleteUser = asyncHandler(async (req: IGetUserAuthInfoRequest, res) => {
+  const user = await User.findById(req?.user?._id);
   const post = await Post.find();
   try {
     // Match with username and pull to remove
     await Post.deleteMany(
-      { user: req.user._id },
-      { $pull: { post: req.user._id } }
+      { user: req?.user?._id },
+      { $pull: { post: req?.user?._id } }
       // You don't need an error callback here since you are
       // using async/await. Handle the error in the catch block.
     );
-    await Post.deleteMany({ _id: req.user._id });
+    await Post.deleteMany({ _id: req?.user?._id });
     res.json({
       message: "deleted successfully",
     });
@@ -187,3 +189,13 @@ exports.deleteUser = asyncHandler(async (req, res) => {
   }
   // await user.remove();
 });
+
+export {
+  registerUser,
+  updateUser,
+  loginUser,
+  getUserProfile,
+  logoutUser,
+  deleteUser,
+  logoutUserAllDevices,
+};

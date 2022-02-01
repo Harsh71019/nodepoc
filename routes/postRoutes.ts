@@ -1,7 +1,6 @@
-const express = require("express");
-const router = express.Router();
-const { protect } = require("../middleware/authMiddleware");
-const {
+import express from "express";
+import protect from "../middleware/authMiddleware";
+import {
   createPost,
   getAllPost,
   getPostsDetails,
@@ -12,14 +11,14 @@ const {
   getCommentDetails,
   deleteComments,
   updateComments,
-} = require("../controllers/postController");
-const { validatePost } = require("../validators/postValidator");
+} from "../controllers/postController";
+import { validatePost } from "../validators/postValidator";
+const router = express.Router();
 
 router
   .route("/")
   .post(validatePost, protect, createPost)
-  .get(protect, getAllPost)
- 
+  .get(protect, getAllPost);
 
 router
   .route("/:id")
@@ -38,4 +37,4 @@ router
   .delete(protect, deleteComments)
   .patch(protect, updateComments);
 
-module.exports = router;
+export default router;

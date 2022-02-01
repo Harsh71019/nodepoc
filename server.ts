@@ -1,22 +1,20 @@
-const express = require("express");
+import express, { RequestHandler } from "express";
 const app = express();
-const posts = require("./data/posts");
-const dotenv = require("dotenv");
-const connectDB = require("./config/db.js");
-const jwt = require("jsonwebtoken");
-const { notFound, errorHandler } = require("./middleware/errorMiddleware");
-const userRoutes = require("./routes/userRoutes");
-const postRoutes = require("./routes/postRoutes");
+import dotenv from "dotenv";
+import connectDB from "./utils/Connectdb";
+import errorHandler from "./middleware/errorMiddleware";
+import userRoutes from "./routes/userRoutes";
+import postRoutes from "./routes/postRoutes";
 var bodyParser = require("body-parser");
+import notFound from "./middleware/notFoundMiddleware";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
-const swaggerJSDoc = require("swagger-jsdoc");
-const swaggerUi = require("swagger-ui-express");
-
-app.use(express.json());
+app.use(express.json() as RequestHandler);
 app.use(
   express.urlencoded({
     extended: true,
-  })
+  }) as RequestHandler
 );
 
 app.use(bodyParser.json());
@@ -58,10 +56,17 @@ app.use("/api/v1/post", postRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
+declare var process: {
+  env: {
+    NODE_ENV: string;
+    PORT: number;
+  };
+};
 const port = process.env.PORT || 5000;
+
 app.listen(
-  port,
-  console.log(`Server running in ${process.env.NODE_ENV} on port ${port}`)
+  port
+  // console.log(`Server running in ${process.env.NODE_ENV} on port ${port}`)
 );
 
 module.exports = app;

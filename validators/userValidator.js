@@ -1,6 +1,6 @@
 const { body, validationResult } = require("express-validator");
 
-exports.validateUser = [
+const validateUser = [
   body("firstName")
     .trim()
     .escape()
@@ -47,3 +47,5 @@ exports.validateUser = [
     next();
   },
 ];
+
+export { validateUser };

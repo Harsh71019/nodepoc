@@ -1,6 +1,6 @@
-const { body, validationResult } = require("express-validator");
+import { body, validationResult } from "express-validator";
 
-exports.validatePost = [
+const validatePost = [
   body("title").not().isEmpty().withMessage("title cannot empty"),
   body("description").not().isEmpty().withMessage("description cannot empty"),
   (req, res, next) => {
@@ -10,3 +10,5 @@ exports.validatePost = [
     next();
   },
 ];
+
+export { validatePost };
