@@ -1,12 +1,24 @@
 import asyncHandler from "express-async-handler";
 import Post from "../models/postModel";
-import User from "../models/userModel";
+import User, { create } from "../models/userModel";
 import {
   IGetUserAuthInfoRequest,
   PostInterface,
   CommentInterface,
 } from "../types";
 import { Response } from "express";
+import { statusCodes } from "../constants/statusConstants";
+
+const {
+  success,
+  created,
+  unauthorized,
+  notfound,
+  doesnotexist,
+  servererror,
+  invalidtoken,
+} = statusCodes;
+
 
 const createPost = asyncHandler(
   async (req: IGetUserAuthInfoRequest, res: Response) => {
@@ -22,11 +34,11 @@ const createPost = asyncHandler(
     });
 
     if (post) {
-      res.status(201).json({
+      res.status(created).json({
         message: "Post created Successfully",
       });
     } else {
-      res.status(500);
+      res.status(servererror);
       throw new Error("Error creating post");
     }
   }
@@ -53,12 +65,12 @@ const getAllPost = asyncHandler(async (req, res) => {
   const posts = await Post.find();
 
   if (posts) {
-    res.status(201).json({
+    res.status(created).json({
       message: "Post fetched Successfully",
       posts: posts,
     });
   } else {
-    res.status(500);
+    res.status(servererror);
     throw new Error("Error fetching post");
   }
 });
@@ -67,12 +79,12 @@ const getPostsDetails = asyncHandler(async (req, res) => {
   const post = await Post.findById(req?.params?.id as string);
 
   if (post) {
-    res.status(201).json({
+    res.status(success).json({
       message: "Post fetched Successfully",
       post: post,
     });
   } else {
-    res.status(500);
+    res.status(servererror);
     throw new Error("Error fetching post");
   }
 });
@@ -80,12 +92,12 @@ const getPostsDetails = asyncHandler(async (req, res) => {
 const deletePost = asyncHandler(async (req: IGetUserAuthInfoRequest, res) => {
   const post = await Post.findById(req?.params?.id);
   if (!post) {
-    res.status(404).json({ msg: "Post not found" });
+    res.status(notfound).json({ msg: "Post not found" });
   }
 
   //Check User
   if (post.user.toString() !== req?.user?._id.toString()) {
-    res.status(401).json({ msg: "User not Authorized" });
+    res.status(unauthorized).json({ msg: "User not Authorized" });
   }
 
   await post.remove();
@@ -97,19 +109,19 @@ const updatePostDetails = asyncHandler(
     const { title, description } = req.body as PostInterface;
     const post = await Post.findById(req?.params?.id);
     if (!post) {
-      res.status(404).json({ msg: "Post not found" });
+      res.status(notfound).json({ msg: "Post not found" });
     }
 
     //Check User
     if (post.user.toString() !== req?.user?._id.toString()) {
-      res.status(401).json({ msg: "User not Authorized" });
+      res.status(unauthorized).json({ msg: "User not Authorized" });
     }
 
     if (post) {
       post.title = title;
       post.description = description;
       await post.save();
-      res.status(201).json({
+      res.status(created).json({
         message: "Post updated Successfully",
         title: title,
         description: description,
@@ -136,7 +148,7 @@ const createComment = asyncHandler(
       await post.save();
       res.json(post.comments);
     } else {
-      res.status(500);
+      res.status(servererror);
       throw new Error("Error creating comment");
     }
   }
@@ -152,9 +164,9 @@ const getCommentDetails = asyncHandler(
 
       //Make sure comment exists
       if (!comment) {
-        res.status(404).json({ msg: "Comment Does not exist!" });
+        res.status(notfound).json({ msg: "Comment Does not exist!" });
       }
-      res.status(201);
+      res.status(success);
       res.json({
         message: "Got comment successfully",
         comment: comment,
@@ -171,9 +183,9 @@ const getCommentByPost = asyncHandler(
 
       //Make sure comment exists
       if (!comments) {
-        res.status(404).json({ msg: "Comment Does not exist!" });
+        res.status(notfound).json({ msg: "Comment Does not exist!" });
       }
-      res.status(201);
+      res.status(success);
       res.json({
         message: "Got comment successfully",
         comments: comments,
@@ -186,7 +198,7 @@ const deleteComments = asyncHandler(
   async (req: IGetUserAuthInfoRequest, res) => {
     const post = await Post.findById(req?.params?.id);
     if (!post) {
-      res.status(404).json({ msg: "Post not found" });
+      res.status(notfound).json({ msg: "Post not found" });
     }
 
     const comment = post.comments.find(
@@ -195,7 +207,7 @@ const deleteComments = asyncHandler(
 
     if (comment) {
       if (comment.user.toString() !== req?.user?._id.toString()) {
-        res.status(401).json({ msg: "User not Authorized" });
+        res.status(unauthorized).json({ msg: "User not Authorized" });
       }
       const removeIndex = post.comments
         .map((comment: CommentInterface) => comment.user.toString())
@@ -203,12 +215,12 @@ const deleteComments = asyncHandler(
       post.comments.splice(removeIndex, 1);
       await post.save();
       res.json(post.comments);
-      res.status(201).json({
+      res.status(success).json({
         message: "Comment deleted Successfully",
         post: post.comments,
       });
     } else {
-      res.status(404);
+      res.status(notfound);
       throw new Error("Comment does not exist");
     }
   }
@@ -219,7 +231,7 @@ const updateComments = asyncHandler(
     const { description } = req.body;
     const post = await Post.findById(req?.params?.id);
     if (!post) {
-      res.status(404).json({ msg: "Post not found" });
+      res.status(notfound).json({ msg: "Post not found" });
     }
 
     if (post) {
@@ -228,11 +240,11 @@ const updateComments = asyncHandler(
       );
       //Check User
       if (comment.user.toString() !== req?.user?._id.toString()) {
-        res.status(401).json({ msg: "User not Authorized" });
+        res.status(unauthorized).json({ msg: "User not Authorized" });
       }
       comment.description = description;
       await post.save();
-      res.status(201).json({
+      res.status(created).json({
         message: "Comment updated Successfully",
         description: description,
       });

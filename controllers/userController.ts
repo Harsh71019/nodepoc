@@ -1,9 +1,21 @@
 import asyncHandler from "express-async-handler";
-import User from "../models/userModel";
+import User, { create } from "../models/userModel";
 import Post from "../models/postModel";
 import { generateToken } from "../utils/generateToken";
 import { userPayload, IGetUserAuthInfoRequest } from "../types";
 import { logger } from "../utils/logger";
+import { statusCodes } from "../constants/statusConstants";
+
+const {
+  success,
+  created,
+  unauthorized,
+  notfound,
+  doesnotexist,
+  servererror,
+  invalidtoken,
+} = statusCodes;
+
 //Description : Register a new user
 //Route name :  POST /api/v1/user
 //Access Level : Public
@@ -24,7 +36,7 @@ const registerUser = asyncHandler(async (req, res) => {
     req.body as userPayload;
   const userExist = await User.findOne({ email });
   if (userExist) {
-    res.status(400);
+    res.status(doesnotexist);
     throw new Error("User already exists");
   }
   const user = await User.create({
@@ -40,7 +52,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const token = generateToken(user._id);
     user.token.push({ token });
     await user.save();
-    res.status(201).json({
+    res.status(created).json({
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -50,7 +62,7 @@ const registerUser = asyncHandler(async (req, res) => {
       token: token,
     });
   } else {
-    res.status(400);
+    res.status(notfound);
     throw new Error("Invalid user data");
   }
 });
@@ -75,7 +87,7 @@ const updateUser = asyncHandler(async (req: IGetUserAuthInfoRequest, res) => {
     const token = generateToken(updatedUser._id);
     user.token = token;
     await user.save(); //Save status codes in Constants
-    res.status(201).json({
+    res.status(created).json({
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -85,7 +97,7 @@ const updateUser = asyncHandler(async (req: IGetUserAuthInfoRequest, res) => {
       token: token,
     });
   } else {
-    res.status(401);
+    res.status(unauthorized);
     throw new Error("User not found");
   }
 });
@@ -108,7 +120,7 @@ const loginUser = asyncHandler(async (req, res) => {
     });
     logger.info("Logged in successfully", user);
   } else {
-    res.status(401);
+    res.status(unauthorized);
     throw new Error("Invalid email or password");
   }
 });
@@ -128,7 +140,7 @@ const getUserProfile = asyncHandler(
         token: generateToken(user._id),
       });
     } else {
-      res.status(401);
+      res.status(unauthorized);
       throw new Error("User not found");
     }
   }
@@ -148,7 +160,7 @@ const logoutUser = asyncHandler(async (req: IGetUserAuthInfoRequest, res) => {
       message: "Logged out successfully",
     });
   } else {
-    res.status(401);
+    res.status(unauthorized);
     throw new Error("User not found");
   }
 });
@@ -164,7 +176,7 @@ const logoutUserAllDevices = asyncHandler(
         message: "Logged out  from all devices successfully",
       });
     } else {
-      res.status(401);
+      res.status(unauthorized);
       throw new Error("User not found");
     }
   }
