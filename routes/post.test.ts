@@ -1,17 +1,17 @@
-const request = require("supertest");
-const { response } = require("../server");
-const app = require("../server");
+import request from "supertest";
+import { app } from "../server";
 
-let token;
+let token: string;
 
 beforeAll((done) => {
   request(app)
     .post("/api/v1/user/login")
     .send({
-      email: "test@gmail.com",
+      email: "harsh@gmail.com",
       password: "Harsh710",
     })
     .end((err, response) => {
+      //@ts-ignore
       token = response._body.token;
       done();
     });

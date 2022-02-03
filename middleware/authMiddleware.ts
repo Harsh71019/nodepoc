@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import asyncHandler from "express-async-handler";
-import { userPayload } from "../types/user";
 
 const protect = asyncHandler(async (req, res, next) => {
   let token: string;
@@ -10,13 +9,8 @@ const protect = asyncHandler(async (req, res, next) => {
     try {
       token = req?.headers?.authorization?.split(" ")[1];
 
-      if (!token) {
-        res.status(401);
-        throw new Error("Not authorized no token");
-      }
-
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-       // @ts-ignore
+      // @ts-ignore
       req.user = await User.findById(decoded.id).select("-password");
 
       next();
@@ -24,6 +18,12 @@ const protect = asyncHandler(async (req, res, next) => {
       res.status(401);
       throw new Error("Not authorized token failed");
     }
+  }
+
+  // @ts-ignore
+  if (!token) {
+    res.status(401);
+    throw new Error("Not authorized no token");
   }
 });
 

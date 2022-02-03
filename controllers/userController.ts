@@ -3,6 +3,7 @@ import User from "../models/userModel";
 import Post from "../models/postModel";
 import { generateToken } from "../utils/generateToken";
 import { userPayload, IGetUserAuthInfoRequest } from "../types";
+import { logger } from "../utils/logger";
 //Description : Register a new user
 //Route name :  POST /api/v1/user
 //Access Level : Public
@@ -105,6 +106,7 @@ const loginUser = asyncHandler(async (req, res) => {
       mobile: user.mobile,
       token: token,
     });
+    logger.info("Logged in successfully", user);
   } else {
     res.status(401);
     throw new Error("Invalid email or password");

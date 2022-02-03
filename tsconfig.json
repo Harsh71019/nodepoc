@@ -10,7 +10,7 @@
     "allowJs": true,
     "noEmit": true,
     "moduleResolution": "node",
-    "types": ["node"],
+    "types": ["node", "jest"],
     "typeRoots": ["./node_modules/@types", "./types/express/index.d.ts"],
     "lib": ["es6"],
     "esModuleInterop": true,
