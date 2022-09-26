@@ -35,7 +35,7 @@ const createPost = asyncHandler(
 
     if (post) {
       res.status(created).json({
-        message: "Post created Successfully",
+        message: "Post created Successfully just checking",
       });
     } else {
       res.status(servererror);
